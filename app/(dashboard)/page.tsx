@@ -1,7 +1,9 @@
-const dashboard = ()=>{
-    return (
-        <p>This is protected route</p>
-    )
-}
+import { Button } from "@/components/ui/button";
+import { UserButton } from "@clerk/nextjs";
 
-export default dashboard 
+
+export default function Home() {
+ return (
+    <div>Dashboard Page</div>
+ )
+}
