@@ -8,6 +8,13 @@
       "when": 1723050941931,
       "tag": "0000_heavy_fenris",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1723081097424,
+      "tag": "0001_smooth_tyger_tiger",
+      "breakpoints": true
     }
   ]
 }
