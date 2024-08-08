@@ -1,12 +1,21 @@
 
 import {Hono} from "hono"
 
+import { acccount } from "@/db/schema"
 
-const app = new Hono();
+import {db} from "@/db/drizzle"
 
-app.get("/", (c)=>{
-    return c.json({acccounts: []})
-})
+
+const app = new Hono()
+    .get("/",async(c)=>{
+
+        const data = await db.select({
+            id : acccount.id,
+            name : acccount.name
+
+        }).from(acccount)
+     return c.json({data})
+    })
 
 
 export default app
