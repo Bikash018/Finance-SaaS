@@ -1,7 +1,10 @@
 
 import {Hono} from "hono"
 
-import { acccount } from "@/db/schema"
+import { acccount, insertAccountsSchema } from "@/db/schema"
+
+import {zValidator} from "@hono/zod-validator"
+import {createId} from  "@paralleldrive/cuid2"
 
 import {db} from "@/db/drizzle"
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth"
@@ -22,6 +25,28 @@ const app = new Hono()
 
         }).from(acccount)
      return c.json({data})
+    })
+
+    .post("/",
+        zValidator("json" , insertAccountsSchema.pick({
+            name : true
+        }) ),
+         clerkMiddleware(),async (c)=>{
+        const auth = getAuth(c)
+
+        const values = c.req.valid("json")
+
+        if(!auth?.userId){
+            return c.json({error : "unauthorised"})
+        }
+
+        const data = await db.insert(acccount).values({
+            id : createId(),
+            userId : auth?.userId,
+            ...values
+        }).returning()
+
+        return c.json({})
     })
 
 
