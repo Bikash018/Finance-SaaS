@@ -2,10 +2,24 @@ import { Hono } from 'hono'
 import { clerkMiddleware, getAuth } from '@hono/clerk-auth'
 import { handle } from 'hono/vercel'
 import accounts from "./accounts"
+import { HTTPException } from 'hono/http-exception'
 
 export const runtime = 'edge'
 
 const app = new Hono().basePath('/api')
+
+
+app.onError((err, c) => {
+    if (err instanceof HTTPException) {
+      // Get the custom response
+      return err.getResponse()
+    }
+
+    return new Response('An unexpected error occurred', { status: 500 });
+    //...
+  })
+
+
 
 
 
