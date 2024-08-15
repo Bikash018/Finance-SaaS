@@ -28,25 +28,39 @@ const app = new Hono()
     })
 
     .post("/",
-        zValidator("json" , insertAccountsSchema.pick({
-            name : true
-        }) ),
-         clerkMiddleware(),async (c)=>{
+     
+         clerkMiddleware(),
+         async (c)=>{
         const auth = getAuth(c)
 
-        const values = c.req.valid("json")
+        // const values : any = await c.req.text()
 
-        if(!auth?.userId){
-            return c.json({error : "unauthorised"})
+        const bodyText = await c.req.text();
+        // const values = JSON.parse(body);
+        const values  = JSON.parse(bodyText);
+
+
+        if (!auth?.userId) {
+            return c.json({ error: "unauthorised" });
         }
 
-        const data = await db.insert(acccount).values({
+        // Ensure `values.name` exists before using it
+        if (!values?.name) {
+            return c.json({ error: "Name is required" }, 400);
+        }
+
+      
+        console.log(values)
+
+      
+
+        const [data] = await db.insert(acccount).values({
             id : createId(),
             userId : auth?.userId,
-            ...values
+           ...values
         }).returning()
 
-        return c.json({})
+        return c.json({data})
     })
 
 
