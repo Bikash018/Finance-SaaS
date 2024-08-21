@@ -22,6 +22,12 @@ import { DataTable } from "@/components/data-table"
         status: "pending",
         email: "m@example.com",
       },
+      {
+        id: "728ed52f",
+        amount: 200,
+        status: "pending",
+        email: "bikash@example.com",
+      },
   ]
 const AccountsPage = ()=>{
     const newAccount = useNewAccount()
