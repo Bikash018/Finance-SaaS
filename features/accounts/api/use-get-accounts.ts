@@ -13,8 +13,10 @@ export const userGetAccounts = ()=>{
             }
 
             const {data} = await response.json()
+            console.log(data,"data fetched succefully")
             return data
 
         }
     })
+    return query;
 }
