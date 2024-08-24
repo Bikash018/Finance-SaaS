@@ -4,11 +4,13 @@ import {Hono} from "hono"
 import { acccount, insertAccountsSchema } from "@/db/schema"
 
 import {zValidator} from "@hono/zod-validator"
+import {z} from "zod"
 import {createId} from  "@paralleldrive/cuid2"
 
 import {db} from "@/db/drizzle"
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth"
 import { HTTPException } from "hono/http-exception"
+import { eq , and , inArray } from "drizzle-orm"
 
 
 const app = new Hono()
@@ -62,6 +64,37 @@ const app = new Hono()
 
         return c.json({data})
     })
+
+    .post("/bulk-delete",
+        clerkMiddleware(),
+        zValidator(
+            "json",
+            z.object({
+                ids : z.array(z.string())
+            }),
+        ),
+        async (c) => {
+            const auth = getAuth(c)
+            const values = c.req.valid("json")
+
+            if (!auth?.userId) {
+                return c.json({ error: "unauthorised" },401);
+            }
+
+            const data = await db
+                        .delete(acccount)
+                        .where(
+                            and(
+                                eq(acccount.userId,auth.userId),
+                                inArray(acccount.id, values.ids)
+                            )
+                        ).returning({
+                            id : acccount.id
+                        })
+                    
+                return c.json({data})
+        }
+    )
 
 
 export default app

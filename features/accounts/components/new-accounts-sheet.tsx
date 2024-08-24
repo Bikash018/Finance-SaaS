@@ -29,8 +29,11 @@ export function NewAccountSheet() {
   const mutation = useCreateAccount()
 
   const onSubmit = (values : FormValues)=>{
-    mutation.mutate(values)
-    
+    mutation.mutate(values, {
+      onSuccess: () => {
+        onClose() // Close the sheet after successful mutation
+      },
+    })
     
     
   }
