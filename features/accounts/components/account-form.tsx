@@ -44,6 +44,8 @@ const AccountForm = ( {
 
 ;
 
+console.log(defaultValues,"defff val")
+
 
 
   const handleSubmit = (values : FormValues)=>{
