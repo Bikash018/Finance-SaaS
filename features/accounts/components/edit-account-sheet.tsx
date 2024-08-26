@@ -13,12 +13,13 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import AccountForm from "./account-form"
-import { useCreateAccount } from "@/features/accounts/api/use-create-accounts"
+
 import { insertAccountsSchema } from "@/db/schema"
 import { z } from "zod"
 import { useOpenAccount } from "@/features/accounts/hooks/use-open-account"
 import { userGetAccount } from "@/features/accounts/api/use-get-account"
 import { Loader2 } from "lucide-react"
+import { useEditAccount } from "@/features/accounts/api/use-edit-accounts"
 
 const formSchema = insertAccountsSchema.pick({
   name : true
@@ -42,10 +43,12 @@ export function EditAccountSheet() {
     {name : ""}
 
 
-  const mutation = useCreateAccount()
 
+  const editMutation = useEditAccount(id);
+
+  const isPending = editMutation.isPending 
   const onSubmit = (values : FormValues)=>{
-    mutation.mutate(values, {
+    editMutation.mutate(values, {
       onSuccess: () => {
         onClose() // Close the sheet after successful mutation
       },
@@ -72,7 +75,7 @@ export function EditAccountSheet() {
               <Loader2 className="size-4 text-muted-foreground animate-spin" />
             </div>
           ) : (
-            <AccountForm onSubmit={onSubmit} disabled={false} defaultValues={defaultValues}/>
+            <AccountForm onSubmit={onSubmit} disabled={isPending} defaultValues={defaultValues}/>
           )}
       
          
