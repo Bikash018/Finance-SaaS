@@ -14,6 +14,7 @@ import {
   FormField,
   FormItem,FormLabel,FormMessage
 } from "@/components/ui/form"
+import { Trash } from 'lucide-react';
 
 const formSchema = insertAccountsSchema.pick({
   name : true
@@ -50,6 +51,10 @@ console.log(defaultValues,"defff val")
 
   const handleSubmit = (values : FormValues)=>{
     onSubmit(values)
+  }
+
+  const handleDelete = ()=>{
+    onDelete?.()
   }
 
  
@@ -114,6 +119,19 @@ console.log(defaultValues,"defff val")
            { id? "Save Changes" : "Create Account"}
             </Button>
           }
+
+        {!!id && (
+          <Button
+            type="button"
+            disabled={disabled}
+            onClick={handleDelete}
+            className="w-full"
+            variant="outline"
+          >
+            <Trash className="size-4 mr-2" />
+            Delete account
+          </Button>
+         )}
       </form>
     </Form>
   );

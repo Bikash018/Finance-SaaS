@@ -20,6 +20,7 @@ import { useOpenAccount } from "@/features/accounts/hooks/use-open-account"
 import { userGetAccount } from "@/features/accounts/api/use-get-account"
 import { Loader2 } from "lucide-react"
 import { useEditAccount } from "@/features/accounts/api/use-edit-accounts"
+import { useDeleteAccount } from "@/features/accounts/api/use-delete-account"
 
 const formSchema = insertAccountsSchema.pick({
   name : true
@@ -45,8 +46,11 @@ export function EditAccountSheet() {
 
 
   const editMutation = useEditAccount(id);
+  const deleteMutation = useDeleteAccount(id);
 
-  const isPending = editMutation.isPending 
+
+
+  const isPending = editMutation.isPending  || deleteMutation.isPending;
   const onSubmit = (values : FormValues)=>{
     editMutation.mutate(values, {
       onSuccess: () => {
@@ -63,7 +67,7 @@ export function EditAccountSheet() {
       </SheetTrigger> */}
       <SheetContent>
         <SheetHeader>
-          <SheetTitle>Add Account</SheetTitle>
+          <SheetTitle>Edit Account</SheetTitle>
          
         </SheetHeader>
 
@@ -75,7 +79,16 @@ export function EditAccountSheet() {
               <Loader2 className="size-4 text-muted-foreground animate-spin" />
             </div>
           ) : (
-            <AccountForm onSubmit={onSubmit} disabled={isPending} defaultValues={defaultValues}/>
+            <AccountForm  
+              id={id} 
+              onSubmit={onSubmit}
+              disabled={isPending} 
+              defaultValues={defaultValues}
+              onDelete={() => {
+                deleteMutation.mutate();
+        
+                }}
+            />
           )}
       
          
