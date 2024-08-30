@@ -22,6 +22,8 @@ import { Loader2 } from "lucide-react"
 import { useEditAccount } from "@/features/accounts/api/use-edit-accounts"
 import { useDeleteAccount } from "@/features/accounts/api/use-delete-account"
 
+import { useConfirm } from "@/hooks/use-confirm"
+
 const formSchema = insertAccountsSchema.pick({
   name : true
 })
@@ -34,8 +36,30 @@ export function EditAccountSheet() {
   const accountQuery = userGetAccount(id)
 
 
+  const [ConfirmDialog, confirm] = useConfirm(
+    "Are you sure you want to delete this account?",
+    "You are about to delete this accaunt."
+  );
+
+
+
+
   
   const isLoading = accountQuery.isLoading;
+
+
+  const onDelete = async () => {
+    const ok = await confirm()
+
+    if(ok) { 
+      deleteMutation.mutate(undefined, {
+        onSuccess: () => {
+          onClose();
+        },
+      })
+    }
+
+  }
 
   
 
@@ -61,6 +85,8 @@ export function EditAccountSheet() {
     
   }
   return (
+    <>
+    <ConfirmDialog/>
     <Sheet open = {isOpen} onOpenChange={onClose}>
       {/* <SheetTrigger asChild>
         <Button variant="outline">Open</Button>
@@ -84,10 +110,7 @@ export function EditAccountSheet() {
               onSubmit={onSubmit}
               disabled={isPending} 
               defaultValues={defaultValues}
-              onDelete={() => {
-                deleteMutation.mutate();
-        
-                }}
+              onDelete={onDelete}
             />
           )}
       
@@ -95,5 +118,6 @@ export function EditAccountSheet() {
          
       </SheetContent>
     </Sheet>
+    </>
   )
 }
