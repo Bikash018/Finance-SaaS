@@ -1,13 +1,13 @@
 import {create} from "zustand"
 
 
-type newAccountState = {
+type newCategoryState = {
     isOpen : boolean,
     onClose : ()=> void,
     onOpen : () => void
 }
 
-export const useNewAccount = create<newAccountState>((set)=> ({
+export const useNewCategory = create<newCategoryState>((set)=> ({
     isOpen : false,
     onOpen : ()=>set({isOpen : true}),
     onClose : ()=> set({isOpen : false})

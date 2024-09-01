@@ -19,7 +19,7 @@ const NavItem: React.FC = () => {
     { name: 'Home', path: '/' },
     { name: 'About', path: '/about' },
     { name: 'Accounts', path: '/accounts' },
-    { name: 'Contact', path: '/contact' },
+    { name: 'Categories', path: '/categories' },
   ];
 
   const handleNavigation = (path: string) => {
