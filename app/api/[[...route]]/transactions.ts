@@ -1,7 +1,7 @@
 
 import {Hono} from "hono"
 
-import {categories , insertCategoriesSchema } from "@/db/schema"
+import {transactions , insertTransactionSchema, categories, acccount } from "@/db/schema"
 
 import {zValidator} from "@hono/zod-validator"
 import {z} from "zod"
@@ -10,206 +10,246 @@ import {createId} from  "@paralleldrive/cuid2"
 import {db} from "@/db/drizzle"
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth"
 import { HTTPException } from "hono/http-exception"
-import { eq , and , inArray } from "drizzle-orm"
+import { eq , and , inArray, gte, lte, desc } from "drizzle-orm"
+import { subDays, parse } from "date-fns";
 
 
 const app = new Hono()
-    .get("/", clerkMiddleware() ,async(c)=>{ 
+    .get("/", 
+      zValidator(
+        "query",
+        z.object({
+          from: z.string().optional(),
+          to: z.string().optional(),
+          accountId: z.string().optional(),
+        })
+      ),
+      clerkMiddleware() ,async(c)=>{ 
         const auth = getAuth(c);
+
+        const { from, to, accountId } = c.req.valid("query");
 
         if(!auth?.userId){
             throw new HTTPException(401, { message: 'User Unauthorised' })
         }
 
-        const data = await db.select({
-            id : categories.id,
-            name : categories.name
+        const defaultTo = new Date();
+        const defaultFrom = subDays(defaultTo, 30);
+  
+        const startDate = from
+        ? parse(from, "yyyy-MM-dd", new Date())
+        : defaultFrom;
+      const endDate = to ? parse(to, "yyyy-MM-dd", new Date()) : defaultTo;
 
-        }).from(categories)
-     return c.json({data})
-    })
+      const data = await db
+        .select({
+          id: transactions.id,
+          date: transactions.date,
+          category: categories.name,
+          categoryId: transactions.categoryId,
+          payee: transactions.payee,
+          amount: transactions.amount,
+          notes: transactions.notes,
+          account: acccount.name,
+          accountId: transactions.accountId,
+        })
+        .from(transactions)
+        .innerJoin(acccount, eq(transactions.accountId, acccount.id))
+        .leftJoin(categories, eq(transactions.categoryId, categories.id))
+        .where(
+          and(
+            accountId ? eq(transactions.accountId, acccount) : undefined,
+            eq(acccount.userId, auth.userId),
+            gte(transactions.date, startDate),
+            lte(transactions.date, endDate)
+          )
+        )
+        .orderBy(desc(transactions.date));
+      return c.json({ data });
+    }
+  )
 
-    .get("/:id" , 
-        zValidator("param" , z.object({
-            id : z.string().optional()
-        })),
-        clerkMiddleware(),
+    // .get("/:id" , 
+    //     zValidator("param" , z.object({
+    //         id : z.string().optional()
+    //     })),
+    //     clerkMiddleware(),
 
-        async(c) => {
-            const auth = getAuth(c)
-            const {id} = c.req.valid("param")
+    //     async(c) => {
+    //         const auth = getAuth(c)
+    //         const {id} = c.req.valid("param")
 
-            if(!id){
-                return c.json({error : "Missing Id"} , 401)
-            }
+    //         if(!id){
+    //             return c.json({error : "Missing Id"} , 401)
+    //         }
 
-            if(!auth?.userId) {
-                return c.json({error: "Unauthorised"} , 401)
-            }
+    //         if(!auth?.userId) {
+    //             return c.json({error: "Unauthorised"} , 401)
+    //         }
 
-            const [data] = await db
-                                .select({
-                                    id : categories.id,
-                                    name : categories.name
-                                }) .from (categories)
-                                .where(
-                                    and(
-                                        eq(categories.userId , auth?.userId),
-                                        eq(categories.id , id)
-                                    ),
-                                );
-            if(!data){
-                return c.json({error : "Not found"} , 404)
-            }
+    //         const [data] = await db
+    //                             .select({
+    //                                 id : categories.id,
+    //                                 name : categories.name
+    //                             }) .from (categories)
+    //                             .where(
+    //                                 and(
+    //                                     eq(categories.userId , auth?.userId),
+    //                                     eq(categories.id , id)
+    //                                 ),
+    //                             );
+    //         if(!data){
+    //             return c.json({error : "Not found"} , 404)
+    //         }
 
-            return c.json({data});
-        }
+    //         return c.json({data});
+    //     }
 
-    )
+    // )
 
-    .post("/",
+    // .post("/",
      
-         clerkMiddleware(),
-         async (c)=>{
-        const auth = getAuth(c)
+    //      clerkMiddleware(),
+    //      async (c)=>{
+    //     const auth = getAuth(c)
 
-        // const values : any = await c.req.text()
+    //     // const values : any = await c.req.text()
 
-        const bodyText = await c.req.text();
-        // const values = JSON.parse(body);
-        const values  = JSON.parse(bodyText);
+    //     const bodyText = await c.req.text();
+    //     // const values = JSON.parse(body);
+    //     const values  = JSON.parse(bodyText);
 
 
-        if (!auth?.userId) {
-            return c.json({ error: "unauthorised" });
-        }
+    //     if (!auth?.userId) {
+    //         return c.json({ error: "unauthorised" });
+    //     }
 
-        // Ensure `values.name` exists before using it
-        if (!values?.name) {
-            return c.json({ error: "Name is required" }, 400);
-        }
-
-      
-        console.log(values)
+    //     // Ensure `values.name` exists before using it
+    //     if (!values?.name) {
+    //         return c.json({ error: "Name is required" }, 400);
+    //     }
 
       
+    //     console.log(values)
 
-        const [data] = await db.insert(categories).values({
-            id : createId(),
-            userId : auth?.userId,
-           ...values
-        }).returning()
+      
 
-        return c.json({data})
-    })
+    //     const [data] = await db.insert(categories).values({
+    //         id : createId(),
+    //         userId : auth?.userId,
+    //        ...values
+    //     }).returning()
 
-    .post("/bulk-delete",
-        clerkMiddleware(),
-        zValidator(
-            "json",
-            z.object({
-                ids : z.array(z.string())
-            }),
-        ),
-        async (c) => {
-            const auth = getAuth(c)
-            const values = c.req.valid("json")
+    //     return c.json({data})
+    // })
 
-            if (!auth?.userId) {
-                return c.json({ error: "unauthorised" },401);
-            }
+    // .post("/bulk-delete",
+    //     clerkMiddleware(),
+    //     zValidator(
+    //         "json",
+    //         z.object({
+    //             ids : z.array(z.string())
+    //         }),
+    //     ),
+    //     async (c) => {
+    //         const auth = getAuth(c)
+    //         const values = c.req.valid("json")
 
-            const data = await db
-                        .delete(categories)
-                        .where(
-                            and(
-                                eq(categories.userId,auth.userId),
-                                inArray(categories.id, values.ids)
-                            )
-                        ).returning({
-                            id : categories.id
-                        })
+    //         if (!auth?.userId) {
+    //             return c.json({ error: "unauthorised" },401);
+    //         }
+
+    //         const data = await db
+    //                     .delete(categories)
+    //                     .where(
+    //                         and(
+    //                             eq(categories.userId,auth.userId),
+    //                             inArray(categories.id, values.ids)
+    //                         )
+    //                     ).returning({
+    //                         id : categories.id
+    //                     })
                     
-                return c.json({data})
-        }
-    )
-    .patch(
-        "/:id",
-        clerkMiddleware(),
-        zValidator(
-          "param",
-          z.object({
-            id: z.string().optional(),
-          })
-        ),
-        zValidator(
-          "json",
-          insertCategoriesSchema.pick({
-            name: true,
-          })
-        ),
-        async (c) => {
-          const auth = getAuth(c);
-          const { id } = c.req.valid("param");
-          const values = c.req.valid("json");
+    //             return c.json({data})
+    //     }
+    // )
+    // .patch(
+    //     "/:id",
+    //     clerkMiddleware(),
+    //     zValidator(
+    //       "param",
+    //       z.object({
+    //         id: z.string().optional(),
+    //       })
+    //     ),
+    //     zValidator(
+    //       "json",
+    //       insertCategoriesSchema.pick({
+    //         name: true,
+    //       })
+    //     ),
+    //     async (c) => {
+    //       const auth = getAuth(c);
+    //       const { id } = c.req.valid("param");
+    //       const values = c.req.valid("json");
     
-          if (!id) {
-            return c.json({ error: "Missing id" }, 400);
-          }
+    //       if (!id) {
+    //         return c.json({ error: "Missing id" }, 400);
+    //       }
     
-          if (!auth?.userId) {
-            return c.json({ error: "Unauthorized" }, 401);
-          }
+    //       if (!auth?.userId) {
+    //         return c.json({ error: "Unauthorized" }, 401);
+    //       }
     
-          const [data] = await db
-            .update(categories)
-            .set(values)
-            .where(and(eq(categories.userId, auth.userId), eq(categories.id, id)))
-            .returning();
+    //       const [data] = await db
+    //         .update(categories)
+    //         .set(values)
+    //         .where(and(eq(categories.userId, auth.userId), eq(categories.id, id)))
+    //         .returning();
     
-          if (!data) {
-            return c.json({ error: "Not found" }, 404);
-          }
+    //       if (!data) {
+    //         return c.json({ error: "Not found" }, 404);
+    //       }
     
-          return c.json({ data });
-        }
-      )
+    //       return c.json({ data });
+    //     }
+    //   )
 
-      .delete(
-        "/:id",
-        clerkMiddleware(),
-        zValidator(
-          "param",
-          z.object({
-            id: z.string().optional(),
-          })
-        ),
-        async (c) => {
-          const auth = getAuth(c);
-          const { id } = c.req.valid("param");
+    //   .delete(
+    //     "/:id",
+    //     clerkMiddleware(),
+    //     zValidator(
+    //       "param",
+    //       z.object({
+    //         id: z.string().optional(),
+    //       })
+    //     ),
+    //     async (c) => {
+    //       const auth = getAuth(c);
+    //       const { id } = c.req.valid("param");
     
-          if (!id) {
-            return c.json({ error: "Missing id" }, 400);
-          }
+    //       if (!id) {
+    //         return c.json({ error: "Missing id" }, 400);
+    //       }
     
-          if (!auth?.userId) {
-            return c.json({ error: "Unauthorized" }, 401);
-          }
+    //       if (!auth?.userId) {
+    //         return c.json({ error: "Unauthorized" }, 401);
+    //       }
     
-          const [data] = await db
-            .delete(categories)
-            .where(and(eq(categories.userId, auth.userId), eq(categories.id, id)))
-            .returning({
-              id: categories.id
-            } );
+    //       const [data] = await db
+    //         .delete(categories)
+    //         .where(and(eq(categories.userId, auth.userId), eq(categories.id, id)))
+    //         .returning({
+    //           id: categories.id
+    //         } );
     
-          if (!data) {
-            return c.json({ error: "Not found" }, 404);
-          }
+    //       if (!data) {
+    //         return c.json({ error: "Not found" }, 404);
+    //       }
     
-          return c.json({ data });
-        }
-      );
+    //       return c.json({ data });
+    //     }
+    //   );
 
 
 export default app
