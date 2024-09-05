@@ -69,79 +69,99 @@ const app = new Hono()
     }
   )
 
-    // .get("/:id" , 
-    //     zValidator("param" , z.object({
-    //         id : z.string().optional()
-    //     })),
-    //     clerkMiddleware(),
+    .get("/:id" , 
+        zValidator("param" , z.object({
+            id : z.string().optional()
+        })),
+        clerkMiddleware(),
 
-    //     async(c) => {
-    //         const auth = getAuth(c)
-    //         const {id} = c.req.valid("param")
+        async(c) => {
+            const auth = getAuth(c)
+            const {id} = c.req.valid("param")
 
-    //         if(!id){
-    //             return c.json({error : "Missing Id"} , 401)
-    //         }
+            if(!id){
+                return c.json({error : "Missing Id"} , 401)
+            }
 
-    //         if(!auth?.userId) {
-    //             return c.json({error: "Unauthorised"} , 401)
-    //         }
+            if(!auth?.userId) {
+                return c.json({error: "Unauthorised"} , 401)
+            }
 
-    //         const [data] = await db
-    //                             .select({
-    //                                 id : categories.id,
-    //                                 name : categories.name
-    //                             }) .from (categories)
-    //                             .where(
-    //                                 and(
-    //                                     eq(categories.userId , auth?.userId),
-    //                                     eq(categories.id , id)
-    //                                 ),
-    //                             );
-    //         if(!data){
-    //             return c.json({error : "Not found"} , 404)
-    //         }
+            const userId = auth?.userId as string;
 
-    //         return c.json({data});
-    //     }
+            const [data] = await db
+                .select({
+                  id: transactions.id,
+                  date: transactions.date,
+ 
+                  categoryId: transactions.categoryId,
+                  payee: transactions.payee,
+                  amount: transactions.amount,
+                  notes: transactions.notes,
+                  
+                  accountId: transactions.accountId,
+                })
+                .from(transactions)
+                .innerJoin(acccount, eq(transactions.accountId, acccount.id))
+                .where(
+                  and(
+                    eq(transactions.id, id),
+                    eq(acccount.userId, userId)
+                  )
+                );
+            if(!data){
+                return c.json({error : "Not found"} , 404)
+            }
 
-    // )
+            return c.json({data});
+        }
 
-    // .post("/",
+    )
+
+    .post("/",
      
-    //      clerkMiddleware(),
-    //      async (c)=>{
-    //     const auth = getAuth(c)
+         clerkMiddleware(),
+         zValidator(
+          "json",
+          insertTransactionSchema.omit({
+            id: true,
+          })
+        ),
+         async (c)=>{
+        const auth = getAuth(c)
 
-    //     // const values : any = await c.req.text()
+        // const values : any = await c.req.text()
 
-    //     const bodyText = await c.req.text();
-    //     // const values = JSON.parse(body);
-    //     const values  = JSON.parse(bodyText);
+        const bodyText = await c.req.text();
+        // const values = JSON.parse(body);
+        // const values  = JSON.parse(bodyText);
+        const values = c.req.valid("json");
 
 
-    //     if (!auth?.userId) {
-    //         return c.json({ error: "unauthorised" });
-    //     }
+        if (!auth?.userId) {
+            return c.json({ error: "unauthorised" });
+        }
 
-    //     // Ensure `values.name` exists before using it
-    //     if (!values?.name) {
-    //         return c.json({ error: "Name is required" }, 400);
-    //     }
+        // Ensure `values.name` exists before using it
+        // if (!values?.name) {
+        //     return c.json({ error: "Name is required" }, 400);
+        // }
 
       
-    //     console.log(values)
+        // console.log(values)
 
       
 
-    //     const [data] = await db.insert(categories).values({
-    //         id : createId(),
-    //         userId : auth?.userId,
-    //        ...values
-    //     }).returning()
+        const [data] = await db
+        .insert(transactions)
+        .values({
+          id: createId(),
+          ...values,
+        })
+        .returning();
 
-    //     return c.json({data})
-    // })
+        return c.json({data})
+    })
 
     // .post("/bulk-delete",
     //     clerkMiddleware(),
