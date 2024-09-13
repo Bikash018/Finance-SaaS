@@ -147,8 +147,7 @@ const app = new Hono()
         //     return c.json({ error: "Name is required" }, 400);
         // }
 
-      
-        // console.log(values)
+
 
       
 
@@ -210,83 +209,111 @@ const app = new Hono()
                 return c.json({data})
         }
     )
-    // .patch(
-    //     "/:id",
-    //     clerkMiddleware(),
-    //     zValidator(
-    //       "param",
-    //       z.object({
-    //         id: z.string().optional(),
-    //       })
-    //     ),
-    //     zValidator(
-    //       "json",
-    //       insertCategoriesSchema.pick({
-    //         name: true,
-    //       })
-    //     ),
-    //     async (c) => {
-    //       const auth = getAuth(c);
-    //       const { id } = c.req.valid("param");
-    //       const values = c.req.valid("json");
+    .patch(
+        "/:id",
+        clerkMiddleware(),
+        zValidator(
+          "param",
+          z.object({
+            id: z.string().optional(),
+          })
+        ),
+        zValidator(
+          'json',
+          insertTransactionSchema.omit({
+            id: true,
+          
+          }),
+        ),
+        async (c) => {
+          const auth = getAuth(c);
+          const { id } = c.req.valid("param");
+          const values = c.req.valid("json");
     
-    //       if (!id) {
-    //         return c.json({ error: "Missing id" }, 400);
-    //       }
+          if (!id) {
+            return c.json({ error: "Missing id" }, 400);
+          }
     
-    //       if (!auth?.userId) {
-    //         return c.json({ error: "Unauthorized" }, 401);
-    //       }
-    
-    //       const [data] = await db
-    //         .update(categories)
-    //         .set(values)
-    //         .where(and(eq(categories.userId, auth.userId), eq(categories.id, id)))
-    //         .returning();
-    
-    //       if (!data) {
-    //         return c.json({ error: "Not found" }, 404);
-    //       }
-    
-    //       return c.json({ data });
-    //     }
-    //   )
+          if (!auth?.userId) {
+            return c.json({ error: "Unauthorized" }, 401);
+          }
 
-    //   .delete(
-    //     "/:id",
-    //     clerkMiddleware(),
-    //     zValidator(
-    //       "param",
-    //       z.object({
-    //         id: z.string().optional(),
-    //       })
-    //     ),
-    //     async (c) => {
-    //       const auth = getAuth(c);
-    //       const { id } = c.req.valid("param");
+          const transactionsToUpdate = db
+          .$with('transactions_to_update')
+          .as(db
+            .select({ id: transactions.id })
+            .from(transactions)
+            .innerJoin(acccount, eq(transactions.accountId, acccount.id))
+            .where(and(
+              eq(transactions.id, id),
+              eq(acccount.userId, auth.userId),
+            )),
+          );
     
-    //       if (!id) {
-    //         return c.json({ error: "Missing id" }, 400);
-    //       }
+          const [data] = await db
+            .with(transactionsToUpdate)
+            .update(transactions)
+            .set({
+              ...values,
+            })
+            .where(
+              inArray(transactions.id, sql`(select id from ${transactionsToUpdate})`),
+            )
+            .returning();
     
-    //       if (!auth?.userId) {
-    //         return c.json({ error: "Unauthorized" }, 401);
-    //       }
+          if (!data) {
+            return c.json({ error: "Not found" }, 404);
+          }
     
-    //       const [data] = await db
-    //         .delete(categories)
-    //         .where(and(eq(categories.userId, auth.userId), eq(categories.id, id)))
-    //         .returning({
-    //           id: categories.id
-    //         } );
+          return c.json({ data });
+        }
+      )
+
+      .delete(
+        '/:id',
+        clerkMiddleware(),
+        zValidator('param', z.object({
+          id: z.string().optional(),
+        })),
+        async (c) => {
+          const auth = getAuth(c);
+          const { id } = c.req.valid('param');
     
-    //       if (!data) {
-    //         return c.json({ error: "Not found" }, 404);
-    //       }
+          if (!id) {
+            return c.json({ error: 'Missing id' }, 400);
+          }
+          if (!auth?.userId) {
+            return c.json({ error: 'Unauthorized' }, 401);
+          }
+          // Common Table Expressiongs (CTE's) to check authorId matches accountId matches with userId
+          const transactionsToDelete = db
+            .$with('transactions_to_delete')
+            .as(db
+              .select({ id: transactions.id })
+              .from(transactions)
+              .innerJoin(acccount, eq(transactions.accountId, acccount.id))
+              .where(and(
+                eq(transactions.id, id),
+                eq(acccount.userId, auth.userId),
+              )),
+            );
     
-    //       return c.json({ data });
-    //     }
-    //   );
+          const [data] = await db
+            .with(transactionsToDelete)
+            .delete(transactions)
+            .where(
+              inArray(transactions.id, sql`(select id from ${transactionsToDelete})`),
+            )
+    
+            .returning({
+              id: transactions.id,
+            });
+          if (!data) {
+            return c.json({ error: 'Not Found' }, 404);
+          }
+          return c.json({ data });
+        },
+      )
 
 
 export default app
