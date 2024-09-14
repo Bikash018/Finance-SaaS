@@ -3,6 +3,7 @@ import { clerkMiddleware, getAuth } from '@hono/clerk-auth'
 import { handle } from 'hono/vercel'
 import accounts from "./accounts"
 import categories from "./categories"
+import transactions from  "./transactions"
 import { HTTPException } from 'hono/http-exception'
 
 export const runtime = 'edge'
@@ -27,6 +28,7 @@ app.onError((err, c) => {
 const routes = app
     .route("/accounts", accounts)
     .route("/categories", categories)
+    .route("/transactions", transactions)
 
 
 

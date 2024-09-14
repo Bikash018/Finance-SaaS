@@ -1,7 +1,7 @@
 
 import {Hono} from "hono"
 
-import {transactions , insertTransactionSchema,  acccount } from "@/db/schema"
+import {transactions , insertTransactionSchema,  acccount , categories } from "@/db/schema"
 
 import {zValidator} from "@hono/zod-validator"
 import {z} from "zod"
@@ -15,59 +15,59 @@ import { subDays, parse } from "date-fns";
 
 
 const app = new Hono()
-  //   .get("/", 
-  //     zValidator(
-  //       "query",
-  //       z.object({
-  //         from: z.string().optional(),
-  //         to: z.string().optional(),
-  //         accountId: z.string().optional(),
-  //       })
-  //     ),
-  //     clerkMiddleware() ,async(c)=>{ 
-  //       const auth = getAuth(c);
+    .get("/", 
+      zValidator(
+        "query",
+        z.object({
+          from: z.string().optional(),
+          to: z.string().optional(),
+          accountId: z.string().optional(),
+        })
+      ),
+      clerkMiddleware() ,async(c)=>{ 
+        const auth = getAuth(c);
 
-  //       const { from, to, accountId } = c.req.valid("query");
+        const { from, to, accountId } = c.req.valid("query");
 
-  //       if(!auth?.userId){
-  //           throw new HTTPException(401, { message: 'User Unauthorised' })
-  //       }
+        if(!auth?.userId){
+            throw new HTTPException(401, { message: 'User Unauthorised' })
+        }
 
-  //       const defaultTo = new Date();
-  //       const defaultFrom = subDays(defaultTo, 30);
+        const defaultTo = new Date();
+        const defaultFrom = subDays(defaultTo, 30);
   
-  //       const startDate = from
-  //       ? parse(from, "yyyy-MM-dd", new Date())
-  //       : defaultFrom;
-  //     const endDate = to ? parse(to, "yyyy-MM-dd", new Date()) : defaultTo;
+        const startDate = from
+        ? parse(from, "yyyy-MM-dd", new Date())
+        : defaultFrom;
+      const endDate = to ? parse(to, "yyyy-MM-dd", new Date()) : defaultTo;
 
-  //     const data = await db
-  //       .select({
-  //         id: transactions.id,
-  //         date: transactions.date,
-  //         category: categories.name,
-  //         categoryId: transactions.categoryId,
-  //         payee: transactions.payee,
-  //         amount: transactions.amount,
-  //         notes: transactions.notes,
-  //         account: acccount.name,
-  //         accountId: transactions.accountId,
-  //       })
-  //       .from(transactions)
-  //       .innerJoin(acccount, eq(transactions.accountId, acccount.id))
-  //       .leftJoin(categories, eq(transactions.categoryId, categories.id))
-  //       .where(
-  //         and(
-  //           accountId ? eq(transactions.accountId, acccount) : undefined,
-  //           eq(acccount.userId, auth.userId),
-  //           gte(transactions.date, startDate),
-  //           lte(transactions.date, endDate)
-  //         )
-  //       )
-  //       .orderBy(desc(transactions.date));
-  //     return c.json({ data });
-  //   }
-  // )
+      const data = await db
+        .select({
+          id: transactions.id,
+          date: transactions.date,
+          category: categories.name,
+          categoryId: transactions.categoryId,
+          payee: transactions.payee,
+          amount: transactions.amount,
+          notes: transactions.notes,
+          account: acccount.name,
+          accountId: transactions.accountId,
+        })
+        .from(transactions)
+        .innerJoin(acccount, eq(transactions.accountId, acccount.id))
+        .leftJoin(categories, eq(transactions.categoryId, categories.id))
+        .where(
+          and(
+            accountId ? eq(transactions.accountId, acccount) : undefined,
+            eq(acccount.userId, auth.userId),
+            gte(transactions.date, startDate),
+            lte(transactions.date, endDate)
+          )
+        )
+        .orderBy(desc(transactions.date));
+      return c.json({ data });
+    }
+  )
 
     .get("/:id" , 
         zValidator("param" , z.object({
