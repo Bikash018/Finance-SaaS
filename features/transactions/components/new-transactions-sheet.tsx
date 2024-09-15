@@ -47,7 +47,7 @@ export function NewTransactionsSheet() {
       </SheetTrigger> */}
       <SheetContent>
         <SheetHeader>
-          <SheetTitle>Add Category</SheetTitle>
+          <SheetTitle>Add New Transactions</SheetTitle>
          
         </SheetHeader>
       

@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {  insertCategoriesSchema } from '@/db/schema';
+import { insertTransactionSchema } from '@/db/schema';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { z } from 'zod';
@@ -16,21 +16,36 @@ import {
 } from "@/components/ui/form"
 import { Trash } from 'lucide-react';
 
-const formSchema = insertCategoriesSchema.pick({
-  name : true
+const formSchema = z.object({
+  date : z.coerce.date(),
+  accountId : z.string(),
+  categoryId : z.string().nullable().optional(),
+  amount : z.string(),
+  notes : z.string().nullable().optional(), 
 })
 
+const apiSchema = insertTransactionSchema.omit({
+  id: true,
+
+});
+
 type FormValues = z.input<typeof formSchema>
+type ApiFormValues = z.input<typeof apiSchema>
 
 type Props = {
   id? : string;
   defaultValues? : FormValues;
-  onSubmit : (values : FormValues) => void;
+  onSubmit : (values : ApiFormValues) => void;
   onDelete? : ()=> void;
   disabled? : boolean 
+  accountOptions : {label : string, value : string}[]
+  categoryOptions : {label : string, value : string}[]
+  onCreateCategory : (name : string) => void
+  onCreateAccount : (name : string) => void
+
 }
 
-const CategoryForm = ( {
+const TransactionForm = ( {
   onSubmit,
   id,
   defaultValues,
@@ -50,7 +65,7 @@ console.log(defaultValues,"defff val")
 
 
   const handleSubmit = (values : FormValues)=>{
-    onSubmit(values)
+    // onSubmit(values)
   }
 
   const handleDelete = ()=>{
@@ -64,7 +79,7 @@ console.log(defaultValues,"defff val")
   
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className='flex flex-col gap-4  '> 
-          <FormField
+          {/* <FormField
             name = "name"
             control={form.control}
             render={({field}) => (
@@ -81,7 +96,7 @@ console.log(defaultValues,"defff val")
                 </FormControl>
               </FormItem>
               )}
-          />
+          /> */}
           {
             <Button className='w-full p-3'>
            { id? "Save Changes" : "Create Category"}
@@ -105,4 +120,4 @@ console.log(defaultValues,"defff val")
   );
 };
 
-export default CategoryForm;
+export default TransactionForm;
