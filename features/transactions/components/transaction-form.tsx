@@ -15,6 +15,7 @@ import {
   FormItem,FormLabel,FormMessage
 } from "@/components/ui/form"
 import { Trash } from 'lucide-react';
+import { Select } from '@/components/select';
 
 const formSchema = z.object({
   date : z.coerce.date(),
@@ -46,11 +47,15 @@ type Props = {
 }
 
 const TransactionForm = ( {
-  onSubmit,
   id,
   defaultValues,
+  onSubmit,
   onDelete,
-  disabled
+  disabled,
+  accountOptions,
+  categoryOptions,
+  onCreateCategory,
+  onCreateAccount,
 } : Props) => {
 
   const form = useForm<FormValues>({
@@ -79,8 +84,8 @@ console.log(defaultValues,"defff val")
   
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className='flex flex-col gap-4  '> 
-          {/* <FormField
-            name = "name"
+          <FormField
+            name = "accountId"
             control={form.control}
             render={({field}) => (
               <FormItem>
@@ -88,15 +93,18 @@ console.log(defaultValues,"defff val")
                     Name
                 </FormLabel>
                 <FormControl>
-                  <Input
-                    disabled={disabled}
-                    placeholder='Eg Food Travel Rent'
-                    {...field}
-                  />
+                <Select
+                  placeholder="Select an account"
+                  options={accountOptions}
+                  onCreate={onCreateAccount}
+                  value={field.value}
+                  onChange={field.onChange}
+                  disabled={disabled}
+                />
                 </FormControl>
               </FormItem>
               )}
-          /> */}
+          /> 
           {
             <Button className='w-full p-3'>
            { id? "Save Changes" : "Create Category"}
