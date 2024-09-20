@@ -4,3 +4,13 @@ import { twMerge } from "tailwind-merge"
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
+
+
+
+export function convertAmountToMiliuinits(amount: number) {
+  return Math.round(amount * 1000);
+}
+
+export function convertAmountFromMiliuinits(amount: number) {
+  return amount / 1000;
+}

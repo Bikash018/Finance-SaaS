@@ -4,7 +4,7 @@ import { insertTransactionSchema } from '@/db/schema';
 import { DatePicker } from '@/components/date-picker';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { cn } from '@/lib/utils';
+import { cn, convertAmountToMiliuinits } from '@/lib/utils';
 import { useState } from 'react';
 import { z } from 'zod';
 import {useForm} from "react-hook-form"
@@ -20,6 +20,7 @@ import {
 import { Loader2, Trash } from 'lucide-react';
 import { Select } from '@/components/select';
 import { AmountInput } from '@/components/amount-input';
+import { parse } from 'path';
 
 
 
@@ -77,7 +78,14 @@ console.log(defaultValues,"defff val")
 
 
   const handleSubmit = (values : FormValues)=>{
-    // onSubmit(values)
+    const amount = parseFloat(values.amount)
+    const amountInMilliUnits = convertAmountToMiliuinits(amount)
+    onSubmit({
+      ...values,
+      amount : amountInMilliUnits,
+ 
+    })
+
     console.log(values,"values")
   }
 
