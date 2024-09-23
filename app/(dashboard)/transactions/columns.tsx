@@ -10,6 +10,9 @@ import { formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { AccountColumn } from './account-column';
+import { CategoryColumn } from './category-column';
+import { Actions } from './actions';
 // import Actions from '@/app/(dashboard)/transactions/actions';
 // import { AccountColumn } from './account-column';
 // import { CategoryColumn } from '@/app/(dashboard)/transactions/category-column';
@@ -75,11 +78,11 @@ export const columns: ColumnDef<ResponseType>[] = [
         </Button>
       );
     },
-    // cell: ({ row }) => {
-    //   return (
-    //     <CategoryColumn id={row.original.id} category={row.original.category} categoryId={row.original.categoryId} />
-    //   );
-    // },
+    cell: ({ row }) => {
+      return (
+        <CategoryColumn id={row.original.id} category={row.original.category} categoryId={row.original.categoryId} />
+      );
+    },
   },
   {
     accessorKey: 'payee',
@@ -120,31 +123,32 @@ export const columns: ColumnDef<ResponseType>[] = [
       );
     },
   },
-  // {
-  //   accessorKey: 'account',
-  //   header: ({ column }) => {
-  //     return (
-  //       <Button
-  //         variant="ghost"
-  //         onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-  //       >
-  //         Account
-  //         <ArrowUpDown className="ml-2 size-4" />
-  //       </Button>
-  //     );
-  //   },
-  //   cell: ({ row }) => {
-  //     return (
-  //       <AccountColumn
-  //         account={row.original.account}
-  //         accountId={row.original.accountId}
-  //       />
-  //     );
-  //   },
-  // },
-  // //   Actions Field
-  // {
-  //   id: 'actions',
-  //   cell: ({ row }) => <Actions id={row.original.id} />,
-  // },
+  {
+    accessorKey: 'account',
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Account
+          <ArrowUpDown className="ml-2 size-4" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      return (
+        <AccountColumn
+          id = {row.original.id}
+          account={row.original.account}
+          accountId={row.original.accountId}
+        />
+      );
+    },
+  },
+  //   Actions Field
+  {
+    id: 'actions',
+    cell: ({ row }) => <Actions id={row.original.id} />,
+  },
 ];

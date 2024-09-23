@@ -9,6 +9,9 @@ import { NewCategorySheet } from "@/features/categories/components/new-categorie
 import { EditCategorySheet } from "@/features/categories/components/edit-category-sheet"
 import { NewTransactionsSheet } from "@/features/transactions/components/new-transactions-sheet"
 
+import { EditTransactionSheet } from "@/features/transactions/components/edit-transaction-sheet"
+import { Edit } from "lucide-react"
+
 
 
 export const SheetProvider = ()=>{
@@ -19,6 +22,7 @@ export const SheetProvider = ()=>{
             <NewCategorySheet/>
             <EditCategorySheet/>    
             <NewTransactionsSheet/>
+            <EditTransactionSheet/>
 
         </>
     )

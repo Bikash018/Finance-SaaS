@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Edit, MoreHorizontal, Trash } from "lucide-react";
 
-import { useOpenAccount } from "@/features/accounts/hooks/use-open-account";
+import { useOpenTransaction } from "@/features/transactions/hooks/use-open-transaction";
 
 
 type Props = {
@@ -20,7 +20,7 @@ export const Actions = ({ id }: Props) => {
 
 
 
-  const { onOpen } = useOpenAccount();
+  const { onOpen } = useOpenTransaction();
 
 
 
