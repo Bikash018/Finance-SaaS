@@ -18,6 +18,7 @@ import { useBulkDeleteCategories } from "@/features/transactions/api/use-bulk-de
 import { useGetTransactions } from "@/features/transactions/api/use-get-transactions"
 import { useState } from "react"
 import { UploadButton } from "./upload-button"
+import { ImportCard } from "./import-card"
 
 
 
@@ -59,11 +60,11 @@ const TransactionsPage = ()=>{
         return (
           <>
             {/* <AccountDialog /> */}
-            {/* <ImportCard
+            <ImportCard
               data={importResults.data}
               onCancel={onCancelImport}
-              onSubmit={onSubmitImport}
-            /> */}
+              onSubmit={() => {}}
+            />
           </>
         );
       }
