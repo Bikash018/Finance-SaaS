@@ -16,11 +16,15 @@ type Props = {
 const options = [
   'amount',
   'payee',
-  // 'notes',
+  'notes',
   'date',
 ];
 
 const TableHeadSelect = ({ columnIndex, selectedColumns, onChange }: Props) => {
+
+  // console.log(columnIndex,selectedColumns,"table head select")
+
+  // console.log(selectedColumns , "selected columnssss");
   const currentSelection = selectedColumns[`column_${columnIndex}`];
   return (
     <Select

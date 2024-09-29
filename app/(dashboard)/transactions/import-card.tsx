@@ -27,22 +27,29 @@ type Props = {
 }
 
 export const ImportCard = ({ data, onCancel, onSubmit }: Props) => {
+
+
   const [selectedColumns, setSelectedColumns] = useState<SelectedColumnsState>({});
 
   const headers = data[0];
   const body = data.slice(1);
 
+  console.log(selectedColumns, "selectedColumns");
+
   const onTableHeadSelectChange = (
     columnIndex: number,
     value: string | null,
   ) => {
+
+    // console.log(columnIndex,value,"table head selection change")
     setSelectedColumns((prev) => {
       const newSelectedColumns = { ...prev };
-      for (const key in newSelectedColumns) {
-        if (newSelectedColumns[key] === value) {
-          newSelectedColumns[key] = null;
-        }
-      }
+      // for (const key in newSelectedColumns) {
+      //   if (newSelectedColumns[key] === value) {
+      //     console.log(key, "key");
+      //     newSelectedColumns[key] = null;
+      //   }
+      // }
       if (value === 'skip') {
         value = null;
       }
@@ -50,6 +57,51 @@ export const ImportCard = ({ data, onCancel, onSubmit }: Props) => {
       return newSelectedColumns;
     });
   };
+
+  const progress = Object.values(selectedColumns).filter(Boolean).length;
+
+  const getColumnIndex = (column: string) => {
+
+    return column.split('_')[1];
+  };
+
+
+  const mappedData = {
+    headers : headers.map((_header,index) => {
+      const columnIndex = getColumnIndex(`column_${index}`);
+
+      return selectedColumns[`column_${columnIndex}`] || null;
+
+    }),
+
+    body : body.map((row) => {
+      const transformedRow = row.map((cell,index)=>{
+
+       
+        const columnIndex = getColumnIndex(`column_${index}`);
+        return selectedColumns[`column_${columnIndex}`] ? cell : null;
+      })
+      return transformedRow.every((item) => item === null)
+      ? []
+      : transformedRow;
+    }).filter((row) => row.length > 0),
+    
+
+   
+  }
+
+  const arrayOfData = mappedData.body.map((row) => {
+    return row.reduce((acc: any, cell, index) => {
+      const header = mappedData.headers[index];
+      if (header !== null) {
+        acc[header] = cell;
+      }
+      return acc;
+    }, {});
+  });
+
+  console.log(arrayOfData,"headersss")
+
 
 
   return (
@@ -66,6 +118,15 @@ export const ImportCard = ({ data, onCancel, onSubmit }: Props) => {
               className="w-full lg:w-auto"
             >
               Cancel
+            </Button>
+
+            <Button
+              size="sm"
+              disabled={progress < requiredOptions.length}
+              // onClick={handleContinue}
+              className="w-full lg:w-auto"
+            >
+              Continue ({progress} / {requiredOptions.length})
             </Button>
        
           </div>
