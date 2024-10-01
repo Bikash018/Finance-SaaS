@@ -16,9 +16,13 @@ import { DataTable } from "@/components/data-table"
 
 import { useBulkDeleteCategories } from "@/features/transactions/api/use-bulk-delete-transactions"
 import { useGetTransactions } from "@/features/transactions/api/use-get-transactions"
+import { transactions as transactionSchema } from '@/db/schema';
 import { useState } from "react"
 import { UploadButton } from "./upload-button"
 import { ImportCard } from "./import-card"
+import { useSelectAccount } from "@/features/accounts/hooks/use-select-account"
+import { toast } from "sonner"
+import { useBulkCreateTransactions } from "@/features/transactions/api/use-bulk-create-transactions"
 
 
 
@@ -38,33 +42,62 @@ enum VARIANTS {
 
 const TransactionsPage = ()=>{
     const [variant, setVariant] = useState<VARIANTS>(VARIANTS.LIST);
+
+    const [AccountDialog, confirm] = useSelectAccount();
     const [importResults, setImportResults] = useState(INITIAL_IMPORT_RESULTS);
     const newTransactions = useNewTransactions()
     const deleteTransactions = useBulkDeleteCategories()
     const transactionsQuery = useGetTransactions() 
+    const createTransactions = useBulkCreateTransactions();
     const transactions = transactionsQuery.data || []
 
+
+
+
     const onUpload = (results: typeof INITIAL_IMPORT_RESULTS) => {
+
         setImportResults(results);
         setVariant(VARIANTS.IMPORT);
       };
+
       const onCancelImport = () => {
         setImportResults(INITIAL_IMPORT_RESULTS);
         setVariant(VARIANTS.LIST);
       };
 
+     
+
     const isDisabled = 
     transactionsQuery.isLoading || deleteTransactions.isPending
+
+
+    const onSubmitImport = async (values: typeof transactionSchema.$inferInsert[]) => {
+      const accountId = await confirm();
+      if (!accountId) {
+        return toast.error('Please select and account to continue.');
+      }
+      const data = values.map((value) => ({
+        ...value,
+        accountId: accountId as string,
+      }));
+      createTransactions.mutate(data, {
+        onSuccess: () => {
+          onCancelImport();
+        },
+      });
+    };
+
+
 
     if (variant === VARIANTS.IMPORT) {
         return (
           <>
-            {/* <AccountDialog /> */}
-            <ImportCard
-              data={importResults.data}
-              onCancel={onCancelImport}
-              onSubmit={() => {}}
-            />
+          <AccountDialog />
+        <ImportCard
+          data={importResults.data}
+          onCancel={onCancelImport}
+          onSubmit={onSubmitImport}
+        />
           </>
         );
       }
