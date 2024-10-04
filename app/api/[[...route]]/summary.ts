@@ -7,6 +7,7 @@ import { and, desc, eq, gte, lt, lte, sql, sum } from 'drizzle-orm';
 
 import { db } from '@/db/drizzle';
 import { acccount, categories, transactions } from '@/db/schema';
+import { calculatePercentageChange } from '@/lib/utils';
 
 
 const app = new Hono()
@@ -78,6 +79,48 @@ const app = new Hono()
       );
 
 
+      const incomeChange = calculatePercentageChange(
+        currentPeriod.income, lastPeriod.income,
+      );
+      const expensesChange = calculatePercentageChange(
+        currentPeriod.expenses, lastPeriod.expenses,
+      );
+      const remainingChange = calculatePercentageChange(
+        currentPeriod.remaining, lastPeriod.remaining,
+      );
+
+
+      const category = await db
+      .select({
+        name: categories.name,
+        value: sql`SUM(ABS(${transactions.amount}))`.mapWith(Number),
+      })
+      .from(transactions)
+      .innerJoin(
+        acccount, eq(transactions.accountId, acccount.id),
+      )
+      .innerJoin(
+        categories, eq(transactions.categoryId, categories.id),
+      )
+      .where(
+        and(
+          accountId ? eq(transactions.accountId, accountId) : undefined,
+          eq(acccount.userId, auth.userId),
+          lt(transactions.amount, 0),
+          gte(transactions.date, startDate),
+          lte(transactions.date, endDate),
+        ),
+      )
+      .groupBy(categories.name)
+      .orderBy(desc(
+        sql`SUM(ABS(${transactions.amount}))`,
+      ));
+
+
+
+
+
+
 
      
 
@@ -86,7 +129,7 @@ const app = new Hono()
           remainingAmount: currentPeriod.remaining,
           
           incomeAmount: currentPeriod.income,
-          
+          category,
           expensesAmount: currentPeriod.expenses,
       
        
