@@ -7,7 +7,7 @@ import { and, desc, eq, gte, lt, lte, sql, sum } from 'drizzle-orm';
 
 import { db } from '@/db/drizzle';
 import { acccount, categories, transactions } from '@/db/schema';
-import { calculatePercentageChange } from '@/lib/utils';
+import { calculatePercentageChange, fillMissingDays } from '@/lib/utils';
 
 
 const app = new Hono()
@@ -117,6 +117,45 @@ const app = new Hono()
       ));
 
 
+      const topCategories = category.slice(0, 3);
+      const otherCategories = category.slice(3);
+      const otherSum = otherCategories
+        .reduce((sum, current) => sum + current.value, 0);
+
+    const finalCategories = topCategories;
+      if (otherCategories.length > 0) {
+        finalCategories.push({
+          name: 'Other',
+          value: otherSum,
+        });
+      }
+
+      const activeDays = await db
+      .select({
+        date: transactions.date,
+        income: sql`SUM(CASE WHEN ${transactions.amount} >= 0 THEN ${transactions.amount} ELSE 0 END)`.mapWith(Number),
+        expenses: sql`SUM(CASE WHEN ${transactions.amount} < 0 THEN ABS(${transactions.amount}) ELSE 0 END)`.mapWith(Number),
+      })
+      .from(transactions)
+      .innerJoin(
+        acccount, eq(transactions.accountId, acccount.id),
+      )
+      .where(
+        and(
+          accountId ? eq(transactions.accountId, accountId) : undefined,
+          eq(acccount.userId, auth.userId),
+          gte(transactions.date, startDate),
+          lte(transactions.date, endDate),
+        ),
+      )
+      .groupBy(transactions.date)
+      .orderBy(transactions.date);
+
+
+      const days = fillMissingDays(activeDays, startDate, endDate);
+
+
+
 
 
 
@@ -127,12 +166,13 @@ const app = new Hono()
       return c.json({
         data: {
           remainingAmount: currentPeriod.remaining,
-          
+          remainingChange,
           incomeAmount: currentPeriod.income,
-          category,
+          incomeChange,
           expensesAmount: currentPeriod.expenses,
-      
-       
+          expensesChange,
+          categories: finalCategories,
+          days,
         },
       });
 
