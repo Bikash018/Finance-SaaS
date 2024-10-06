@@ -1,11 +1,15 @@
-import { Button } from "@/components/ui/button";
-import { UserButton } from "@clerk/nextjs";
+'use client';
 
 
+import { DataGrid } from '@/components/data-grid';
 
-  
-export default function Home() {
- return (
-    <div>Dash Page</div>
- )
+
+export default function DashboardPage() {
+
+  return (
+    <div className="mx-auto  w-full max-w-screen-2xl pb-10">
+      <DataGrid />
+      {/* <DataCharts /> */}
+    </div>
+  );
 }
