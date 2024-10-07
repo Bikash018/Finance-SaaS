@@ -3,10 +3,11 @@ import { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-// import LineVariant from '@/components/line-variant';
+import LineVariant from '@/components/line-variant';
 import AreaVariant from '@/components/area-variant';
-// import BarVariant from '@/components/bar-variant';
+import BarVariant from '@/components/bar-variant';
 import { Skeleton } from '@/components/ui/skeleton';
+
 
 type Props = {
   data?: {
@@ -63,8 +64,8 @@ export const Chart = ({ data = [] }: Props) => {
         ) : (
           <>
             {chartType === 'area' && <AreaVariant data={data} />}
-            {/* {chartType === 'bar' && <BarVariant data={data} />}
-            {chartType === 'line' && <LineVariant data={data} />} */}
+               {chartType === 'bar' && <BarVariant data={data} />} 
+           {chartType === 'line' && <LineVariant data={data} />}  
           </>
         )}
       </CardContent>
