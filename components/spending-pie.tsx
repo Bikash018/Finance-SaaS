@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 // import { RadialVariant } from '@/components/radial-variant';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PieVariant } from './pie-variant';
+import { RadarVariant } from './radar-variant';
+import { RadialVariant } from './radial-variant';
 
 type Props = {
   data?: {
@@ -56,6 +58,8 @@ export const SpendingPie = ({ data = [] }: Props) => {
 
           <>
             {chartType === 'pie' && <PieVariant data={data} />}
+            {chartType === 'radar' && <RadarVariant data={data} />}
+            {chartType === 'radial' && <RadialVariant data={data} />}
          
           </>
        
