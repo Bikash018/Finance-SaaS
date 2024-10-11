@@ -4,7 +4,7 @@ import TableHeadSelect from '@/app/(dashboard)/transactions/table-head-select';
 
 type Props = {
   headers: string[];
-  body: string[][ ];
+  body: string[][];
   selectedColumns: Record<string, string | null>;
   onTableHeadSelectChange: (columnIndex: number, value: string | null) => void;
 }
